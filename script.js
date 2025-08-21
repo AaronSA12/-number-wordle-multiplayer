@@ -38,13 +38,8 @@ class MultiplayerNumberWordle {
         });
         
         this.socket.on('gameState', (state) => {
+            console.log('Received game state:', state);
             this.updateGameState(state);
-            
-            // If this is the first time we're getting game state and the game has started, show the board
-            if (state.gameStarted && !this.gameBoardShown) {
-                this.showGameBoard();
-                this.gameBoardShown = true;
-            }
         });
     }
 
@@ -386,6 +381,12 @@ class MultiplayerNumberWordle {
         this.isMyTurn = state.isMyTurn;
         
         // Update UI based on game state
+        if (state.gameStarted && !this.gameBoardShown) {
+            console.log('Game started, showing game board');
+            this.showGameBoard();
+            this.gameBoardShown = true;
+        }
+        
         if (state.gameStarted) {
             this.updateCurrentPlayerDisplay();
             this.updateHistoryDisplay();

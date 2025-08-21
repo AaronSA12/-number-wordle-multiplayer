@@ -131,8 +131,8 @@ class Game {
             gameStatus: this.gameStatus,
             winner: this.winner,
             isMyTurn: this.currentTurn === playerId,
-            myHistory: this.gameHistory[playerId],
-            opponentHistory: this.gameHistory[opponentId],
+            myHistory: this.gameHistory[playerId] || [],
+            opponentHistory: this.gameHistory[opponentId] || [],
             gameStarted: this.gameStatus === 'active' || this.gameStatus === 'finished'
         };
         
