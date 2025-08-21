@@ -86,6 +86,8 @@ class Game {
         // Switch turns
         this.currentTurn = this.currentTurn === this.player1Id ? this.player2Id : this.player1Id;
         
+        console.log(`Turn switched. Player 1: ${this.player1Id}, Player 2: ${this.player2Id}, Current Turn: ${this.currentTurn}`);
+        
         return { ...feedback, gameOver: false };
     }
 
@@ -123,7 +125,7 @@ class Game {
         const isPlayer1 = playerId === this.player1Id;
         const opponentId = isPlayer1 ? this.player2Id : this.player1Id;
         
-        return {
+        const gameState = {
             gameId: this.gameId,
             currentTurn: this.currentTurn,
             gameStatus: this.gameStatus,
@@ -133,6 +135,10 @@ class Game {
             opponentHistory: this.gameHistory[opponentId],
             gameStarted: this.gameStatus === 'active' || this.gameStatus === 'finished'
         };
+        
+        console.log(`Game state for ${playerId}: isMyTurn=${gameState.isMyTurn}, currentTurn=${this.currentTurn}`);
+        
+        return gameState;
     }
 }
 
@@ -174,9 +180,21 @@ io.on('connection', (socket) => {
         io.to(gameId).emit('gameUpdate', {
             type: 'playerJoined',
             playerId: socket.id,
-            playerName: playerName,
-            gameState: game.getGameState(socket.id)
+            playerName: playerName
         });
+        
+        // Send updated game state to both players if game exists
+        if (game) {
+            const player1Socket = io.sockets.sockets.get(game.player1Id);
+            const player2Socket = io.sockets.sockets.get(game.player2Id);
+            
+            if (player1Socket) {
+                player1Socket.emit('gameState', game.getGameState(game.player1Id));
+            }
+            if (player2Socket) {
+                player2Socket.emit('gameState', game.getGameState(game.player2Id));
+            }
+        }
         
         console.log(`Player ${playerName} joined game ${gameId}`);
     });
@@ -194,15 +212,25 @@ io.on('connection', (socket) => {
         const gameStarted = game.addPlayerNumbers(socket.id, numbers);
         
         if (gameStarted) {
+            // Send game started event to both players
             io.to(player.gameId).emit('gameUpdate', {
-                type: 'gameStarted',
-                gameState: game.getGameState(socket.id)
+                type: 'gameStarted'
             });
+            
+            // Send updated game state to both players
+            const player1Socket = io.sockets.sockets.get(game.player1Id);
+            const player2Socket = io.sockets.sockets.get(game.player2Id);
+            
+            if (player1Socket) {
+                player1Socket.emit('gameState', game.getGameState(game.player1Id));
+            }
+            if (player2Socket) {
+                player2Socket.emit('gameState', game.getGameState(game.player2Id));
+            }
         } else {
             io.to(player.gameId).emit('gameUpdate', {
                 type: 'numbersSet',
-                playerId: socket.id,
-                gameState: game.getGameState(socket.id)
+                playerId: socket.id
             });
         }
     });
