@@ -86,7 +86,7 @@ class Game {
         // Switch turns
         this.currentTurn = this.currentTurn === this.player1Id ? this.player2Id : this.player1Id;
         
-        console.log(`Turn switched. Player 1: ${this.player1Id}, Player 2: ${this.player2Id}, Current Turn: ${this.currentTurn}`);
+        // console.log(`Turn switched. Player 1: ${this.player1Id}, Player 2: ${this.player2Id}, Current Turn: ${this.currentTurn}`);
         
         return { ...feedback, gameOver: false };
     }
@@ -136,7 +136,7 @@ class Game {
             gameStarted: this.gameStatus === 'active' || this.gameStatus === 'finished'
         };
         
-        console.log(`Game state for ${playerId}: isMyTurn=${gameState.isMyTurn}, currentTurn=${this.currentTurn}`);
+        // console.log(`Game state for ${playerId}: isMyTurn=${gameState.isMyTurn}, currentTurn=${this.currentTurn}`);
         
         return gameState;
     }
@@ -183,8 +183,8 @@ io.on('connection', (socket) => {
             playerName: playerName
         });
         
-        // Send updated game state to both players if game exists
-        if (game) {
+        // Only send game state if this is a new player joining an existing game
+        if (game && game.player2Id) {
             const player1Socket = io.sockets.sockets.get(game.player1Id);
             const player2Socket = io.sockets.sockets.get(game.player2Id);
             
@@ -232,6 +232,8 @@ io.on('connection', (socket) => {
                 type: 'numbersSet',
                 playerId: socket.id
             });
+            
+            // Don't send game state here - it will be sent when the game actually starts
         }
     });
 
