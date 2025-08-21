@@ -14,6 +14,7 @@ class MultiplayerNumberWordle {
         this.singlePlayerHistory = [];
         this.gameStartTime = null;
         this.guessCount = 0;
+        this.gameBoardShown = false;
         
         this.initializeSocket();
         this.initializeEventListeners();
@@ -38,6 +39,12 @@ class MultiplayerNumberWordle {
         
         this.socket.on('gameState', (state) => {
             this.updateGameState(state);
+            
+            // If this is the first time we're getting game state and the game has started, show the board
+            if (state.gameStarted && !this.gameBoardShown) {
+                this.showGameBoard();
+                this.gameBoardShown = true;
+            }
         });
     }
 
@@ -331,8 +338,8 @@ class MultiplayerNumberWordle {
     }
 
     handleGameStarted(data) {
-        this.updateGameState(data.gameState);
-        this.showGameBoard();
+        // Request updated game state since it's sent separately
+        this.socket.emit('getGameState');
     }
 
     handleGuessResult(data) {
@@ -442,6 +449,7 @@ class MultiplayerNumberWordle {
         this.playerName = null;
         this.isMyTurn = false;
         this.gameState = null;
+        this.gameBoardShown = false;
         
         // Clear all inputs
         const allInputs = document.querySelectorAll('input');

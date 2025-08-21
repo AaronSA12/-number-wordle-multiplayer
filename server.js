@@ -183,16 +183,18 @@ io.on('connection', (socket) => {
             playerName: playerName
         });
         
-        // Only send game state if this is a new player joining an existing game
-        if (game && game.player2Id) {
+        // Send game state to all players in the game
+        if (game) {
             const player1Socket = io.sockets.sockets.get(game.player1Id);
-            const player2Socket = io.sockets.sockets.get(game.player2Id);
-            
             if (player1Socket) {
                 player1Socket.emit('gameState', game.getGameState(game.player1Id));
             }
-            if (player2Socket) {
-                player2Socket.emit('gameState', game.getGameState(game.player2Id));
+            
+            if (game.player2Id) {
+                const player2Socket = io.sockets.sockets.get(game.player2Id);
+                if (player2Socket) {
+                    player2Socket.emit('gameState', game.getGameState(game.player2Id));
+                }
             }
         }
         
