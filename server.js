@@ -74,6 +74,13 @@ class Game {
             timestamp: Date.now()
         };
         
+        // Ensure history array exists for this player
+        if (!this.gameHistory[playerId]) {
+            console.log(`Creating history array for player ${playerId}`);
+            this.gameHistory[playerId] = [];
+        }
+        
+        console.log(`Adding guess to history for player ${playerId}, history length: ${this.gameHistory[playerId].length}`);
         this.gameHistory[playerId].push(historyEntry);
         
         // Check for win
@@ -176,6 +183,11 @@ io.on('connection', (socket) => {
             // Join existing game
             console.log(`Player ${socket.id} joining existing game ${gameId} as Player 2`);
             game.player2Id = socket.id;
+            
+            // Initialize history array for the second player
+            if (!game.gameHistory[socket.id]) {
+                game.gameHistory[socket.id] = [];
+            }
         } else {
             console.log(`Game ${gameId} is full, cannot join`);
             return;
