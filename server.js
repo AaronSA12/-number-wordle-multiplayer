@@ -185,15 +185,21 @@ io.on('connection', (socket) => {
         
         // Send game state to all players in the game
         if (game) {
+            console.log(`Game ${gameId}: Player 1: ${game.player1Id}, Player 2: ${game.player2Id}`);
+            
             const player1Socket = io.sockets.sockets.get(game.player1Id);
             if (player1Socket) {
-                player1Socket.emit('gameState', game.getGameState(game.player1Id));
+                const player1State = game.getGameState(game.player1Id);
+                console.log(`Sending state to Player 1:`, player1State);
+                player1Socket.emit('gameState', player1State);
             }
             
             if (game.player2Id) {
                 const player2Socket = io.sockets.sockets.get(game.player2Id);
                 if (player2Socket) {
-                    player2Socket.emit('gameState', game.getGameState(game.player2Id));
+                    const player2State = game.getGameState(game.player2Id);
+                    console.log(`Sending state to Player 2:`, player2State);
+                    player2Socket.emit('gameState', player2State);
                 }
             }
         }
@@ -211,9 +217,12 @@ io.on('connection', (socket) => {
         const game = games.get(player.gameId);
         if (!game) return;
         
+        console.log(`Player ${socket.id} setting numbers for game ${player.gameId}`);
         const gameStarted = game.addPlayerNumbers(socket.id, numbers);
+        console.log(`Game started: ${gameStarted}, Game status: ${game.gameStatus}`);
         
         if (gameStarted) {
+            console.log(`Game is starting! Sending gameStarted event to both players`);
             // Send game started event to both players
             io.to(player.gameId).emit('gameUpdate', {
                 type: 'gameStarted'
@@ -224,12 +233,17 @@ io.on('connection', (socket) => {
             const player2Socket = io.sockets.sockets.get(game.player2Id);
             
             if (player1Socket) {
-                player1Socket.emit('gameState', game.getGameState(game.player1Id));
+                const player1State = game.getGameState(game.player1Id);
+                console.log(`Sending final state to Player 1:`, player1State);
+                player1Socket.emit('gameState', player1State);
             }
             if (player2Socket) {
-                player2Socket.emit('gameState', game.getGameState(game.player2Id));
+                const player2State = game.getGameState(game.player2Id);
+                console.log(`Sending final state to Player 2:`, player2State);
+                player2Socket.emit('gameState', player2State);
             }
         } else {
+            console.log(`Player ${socket.id} set numbers, waiting for other player`);
             io.to(player.gameId).emit('gameUpdate', {
                 type: 'numbersSet',
                 playerId: socket.id
