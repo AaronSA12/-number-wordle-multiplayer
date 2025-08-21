@@ -59,7 +59,10 @@ class MultiplayerNumberWordle {
         document.getElementById('newGameFromWinner').addEventListener('click', () => this.resetGame());
         document.getElementById('newSinglePlayerGame').addEventListener('click', () => this.resetSinglePlayer());
         document.getElementById('newSinglePlayerGameFromWinner').addEventListener('click', () => this.resetSinglePlayer());
+        document.getElementById('newSinglePlayerGameFromGiveUp').addEventListener('click', () => this.resetSinglePlayer());
         document.getElementById('backToLobby').addEventListener('click', () => this.backToLobby());
+        document.getElementById('backToLobbyFromGiveUp').addEventListener('click', () => this.backToLobby());
+        document.getElementById('giveUp').addEventListener('click', () => this.giveUp());
         
         // History tab events
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -697,6 +700,7 @@ class MultiplayerNumberWordle {
         // Reset display
         document.getElementById('singlePlayerBoard').style.display = 'none';
         document.getElementById('singlePlayerWinner').style.display = 'none';
+        document.getElementById('singlePlayerGiveUp').style.display = 'none';
         document.getElementById('gameLobby').style.display = 'block';
         
         // Clear history
@@ -708,6 +712,32 @@ class MultiplayerNumberWordle {
 
     backToLobby() {
         this.resetSinglePlayer();
+    }
+
+    giveUp() {
+        const gameDuration = Math.floor((Date.now() - this.gameStartTime) / 1000);
+        const minutes = Math.floor(gameDuration / 60);
+        const seconds = gameDuration % 60;
+        const durationText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        // Display AI numbers
+        const aiNumbersContainer = document.getElementById('aiNumbersRevealed');
+        aiNumbersContainer.innerHTML = '';
+        
+        this.aiNumbers.forEach(num => {
+            const numberElement = document.createElement('div');
+            numberElement.className = 'ai-number';
+            numberElement.textContent = num;
+            aiNumbersContainer.appendChild(numberElement);
+        });
+        
+        // Update stats
+        document.getElementById('giveUpTotalGuesses').textContent = this.guessCount;
+        document.getElementById('giveUpGameDuration').textContent = durationText;
+        
+        // Hide game board, show give up screen
+        document.getElementById('singlePlayerBoard').style.display = 'none';
+        document.getElementById('singlePlayerGiveUp').style.display = 'block';
     }
 }
 

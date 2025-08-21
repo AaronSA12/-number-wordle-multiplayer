@@ -82,7 +82,10 @@
                     <input type="number" min="0" max="9" class="single-guess-input" data-position="3">
                     <input type="number" min="0" max="9" class="single-guess-input" data-position="4">
                 </div>
-                <button class="submit-guess" id="submitSinglePlayerGuess">Submit Guess</button>
+                <div class="guess-buttons">
+                    <button class="submit-guess" id="submitSinglePlayerGuess">Submit Guess</button>
+                    <button class="give-up-btn" id="giveUp">Give Up & Reveal</button>
+                </div>
             </div>
 
             <div class="game-history">
@@ -167,6 +170,21 @@
             </div>
             <button class="new-game-btn" id="newSinglePlayerGameFromWinner">Play Again</button>
             <button class="back-to-lobby-btn" id="backToLobby">Back to Lobby</button>
+        </div>
+
+        <!-- Single Player Give Up Screen -->
+        <div class="single-player-giveup" id="singlePlayerGiveUp" style="display: none;">
+            <h2>😔 You Gave Up!</h2>
+            <p>The AI's secret numbers were:</p>
+            <div class="ai-numbers-revealed" id="aiNumbersRevealed">
+                <!-- AI numbers will be displayed here -->
+            </div>
+            <div class="game-stats">
+                <p><strong>Total Guesses:</strong> <span id="giveUpTotalGuesses">0</span></p>
+                <p><strong>Game Duration:</strong> <span id="giveUpGameDuration">0:00</span></p>
+            </div>
+            <button class="new-game-btn" id="newSinglePlayerGameFromGiveUp">Try Again</button>
+            <button class="back-to-lobby-btn" id="backToLobbyFromGiveUp">Back to Lobby</button>
         </div>
 
         <!-- Winner Screen -->
