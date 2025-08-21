@@ -348,6 +348,7 @@ class MultiplayerNumberWordle {
     }
 
     handleGameStarted(data) {
+        console.log('Game started event received:', data);
         // Request updated game state since it's sent separately
         this.socket.emit('getGameState');
     }
@@ -377,6 +378,7 @@ class MultiplayerNumberWordle {
     }
 
     updateGameState(state) {
+        console.log('Updating game state:', state);
         this.gameState = state;
         this.isMyTurn = state.isMyTurn;
         
@@ -390,6 +392,13 @@ class MultiplayerNumberWordle {
         if (state.gameStarted) {
             this.updateCurrentPlayerDisplay();
             this.updateHistoryDisplay();
+        }
+        
+        // Fallback: if game is started but board not shown, force show it
+        if (state.gameStarted && !this.gameBoardShown) {
+            console.log('Fallback: forcing game board to show');
+            this.showGameBoard();
+            this.gameBoardShown = true;
         }
     }
 
@@ -448,6 +457,7 @@ class MultiplayerNumberWordle {
     }
 
     showGameBoard() {
+        console.log('Showing game board for game:', this.gameId);
         document.getElementById('gameSetup').style.display = 'none';
         document.getElementById('gameBoard').style.display = 'block';
         
