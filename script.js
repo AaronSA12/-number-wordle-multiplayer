@@ -562,9 +562,6 @@ class MultiplayerNumberWordle {
             return;
         }
         
-        // AI makes a guess
-        this.makeAIGuess();
-        
         // Update display
         this.updateSinglePlayerHistoryDisplay();
         this.clearSinglePlayerGuessInputs();
@@ -585,27 +582,7 @@ class MultiplayerNumberWordle {
         });
     }
 
-    makeAIGuess() {
-        // Simple AI: make a random guess
-        const aiGuess = this.generateAINumbers();
-        
-        // Calculate feedback for AI's guess
-        const aiFeedback = this.calculateFeedback(aiGuess, this.playerNumbers);
-        
-        // Add to history
-        this.singlePlayerHistory.push({
-            type: 'ai',
-            guess: [...aiGuess],
-            feedback: aiFeedback,
-            timestamp: Date.now()
-        });
-        
-        // Check if AI won
-        if (aiFeedback.correctPositions === 5) {
-            this.endSinglePlayerGame('ai');
-            return;
-        }
-    }
+    // AI guessing removed - single player mode is just player vs AI secret numbers
 
     calculateFeedback(guess, targetNumbers) {
         let correctNumbers = 0;
@@ -643,13 +620,8 @@ class MultiplayerNumberWordle {
         const seconds = gameDuration % 60;
         const durationText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
         
-        if (winner === 'player') {
-            document.getElementById('singlePlayerWinnerText').textContent = 
-                `Congratulations! You won in ${this.guessCount} guesses!`;
-        } else {
-            document.getElementById('singlePlayerWinnerText').textContent = 
-                `The AI won! Better luck next time!`;
-        }
+        document.getElementById('singlePlayerWinnerText').textContent = 
+            `Congratulations! You won in ${this.guessCount} guesses!`;
         
         document.getElementById('totalGuesses').textContent = this.guessCount;
         document.getElementById('gameDuration').textContent = durationText;
@@ -666,7 +638,6 @@ class MultiplayerNumberWordle {
             const entryElement = document.createElement('div');
             entryElement.className = 'guess-entry';
             
-            const playerText = entry.type === 'player' ? 'You' : 'AI';
             const feedbackText = `Correct numbers: ${entry.feedback.correctNumbers}, Correct positions: ${entry.feedback.correctPositions}`;
             
             entryElement.innerHTML = `
@@ -674,7 +645,7 @@ class MultiplayerNumberWordle {
                     ${entry.guess.map(num => `<div class="guess-number">${num}</div>`).join('')}
                 </div>
                 <div class="feedback">
-                    <strong>${playerText}</strong> - ${feedbackText}
+                    <strong>You</strong> - ${feedbackText}
                 </div>
             `;
             
