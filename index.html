@@ -16,28 +16,86 @@
 
         <!-- Game Lobby -->
         <div class="game-lobby" id="gameLobby">
-            <h2>Join or Create a Game</h2>
-            <div class="lobby-options">
-                <div class="create-game">
-                    <h3>Create New Game</h3>
-                    <input type="text" id="createPlayerName" placeholder="Enter your name" maxlength="20">
-                    <button class="create-btn" id="createGame">Create Game</button>
-                </div>
-                
-                <div class="join-game">
-                    <h3>Join Existing Game</h3>
-                    <input type="text" id="joinPlayerName" placeholder="Enter your name" maxlength="20">
-                    <input type="text" id="gameCode" placeholder="Enter game code" maxlength="6">
-                    <button class="join-btn" id="joinGame">Join Game</button>
+            <h2>Choose Your Game Mode</h2>
+            
+            <!-- Single Player Mode -->
+            <div class="game-mode-section">
+                <h3>🎮 Single Player Mode</h3>
+                <p>Play against the computer AI</p>
+                <div class="single-player-setup">
+                    <input type="text" id="singlePlayerName" placeholder="Enter your name" maxlength="20">
+                    <button class="single-player-btn" id="startSinglePlayer">Start Single Player Game</button>
                 </div>
             </div>
             
-            <div class="active-games" id="activeGames">
-                <h3>Active Games</h3>
-                <div class="games-list" id="gamesList">
-                    <!-- Active games will be populated here -->
+            <!-- Multiplayer Mode -->
+            <div class="game-mode-section">
+                <h3>🌐 Multiplayer Mode</h3>
+                <p>Play with friends online</p>
+                <div class="lobby-options">
+                    <div class="create-game">
+                        <h4>Create New Game</h4>
+                        <input type="text" id="createPlayerName" placeholder="Enter your name" maxlength="20">
+                        <button class="create-btn" id="createGame">Create Game</button>
+                    </div>
+                    
+                    <div class="join-game">
+                        <h4>Join Existing Game</h4>
+                        <input type="text" id="joinPlayerName" placeholder="Enter your name" maxlength="20">
+                        <input type="text" id="gameCode" placeholder="Enter game code" maxlength="6">
+                        <button class="join-btn" id="joinGame">Join Game</button>
+                    </div>
+                </div>
+                
+                <div class="active-games" id="activeGames">
+                    <h4>Active Games</h4>
+                    <div class="games-list" id="gamesList">
+                        <!-- Active games will be populated here -->
+                    </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Single Player Game Board -->
+        <div class="single-player-board" id="singlePlayerBoard" style="display: none;">
+            <div class="game-header">
+                <div class="game-mode-indicator">
+                    <strong>🎮 Single Player Mode</strong>
+                </div>
+                <div class="current-player">
+                    <h3>Current Turn: <span id="singlePlayerTurn">Your Turn!</span></h3>
+                </div>
+            </div>
+            
+            <div class="game-info-single">
+                <p><strong>Player:</strong> <span id="singlePlayerNameDisplay"></span></p>
+                <p><strong>AI Opponent:</strong> Computer</p>
+                <p><strong>Difficulty:</strong> <span id="aiDifficulty">Normal</span></p>
+            </div>
+            
+            <div class="guess-section">
+                <h3>Make Your Guess</h3>
+                <div class="guess-inputs">
+                    <input type="number" min="0" max="9" class="single-guess-input" data-position="0">
+                    <input type="number" min="0" max="9" class="single-guess-input" data-position="1">
+                    <input type="number" min="0" max="9" class="single-guess-input" data-position="2">
+                    <input type="number" min="0" max="9" class="single-guess-input" data-position="3">
+                    <input type="number" min="0" max="9" class="single-guess-input" data-position="4">
+                </div>
+                <button class="submit-guess" id="submitSinglePlayerGuess">Submit Guess</button>
+            </div>
+
+            <div class="game-history">
+                <div class="history-tabs">
+                    <button class="tab-btn active" data-tab="my-guesses-single">Your Guesses</button>
+                    <button class="tab-btn" data-tab="ai-guesses">AI Guesses</button>
+                </div>
+                <div class="history-container" id="singlePlayerHistoryContainer">
+                    <!-- Game history will be populated here -->
+                </div>
+            </div>
+
+            <button class="new-game-btn" id="newSinglePlayerGame">New Game</button>
         </div>
 
         <!-- Game Setup -->
@@ -98,6 +156,18 @@
             </div>
 
             <button class="new-game-btn" id="newGame">New Game</button>
+        </div>
+
+        <!-- Single Player Winner Screen -->
+        <div class="single-player-winner" id="singlePlayerWinner" style="display: none;">
+            <h2>🎉 Game Over! 🎉</h2>
+            <p id="singlePlayerWinnerText"></p>
+            <div class="game-stats">
+                <p><strong>Total Guesses:</strong> <span id="totalGuesses">0</span></p>
+                <p><strong>Game Duration:</strong> <span id="gameDuration">0:00</span></p>
+            </div>
+            <button class="new-game-btn" id="newSinglePlayerGameFromWinner">Play Again</button>
+            <button class="back-to-lobby-btn" id="backToLobby">Back to Lobby</button>
         </div>
 
         <!-- Winner Screen -->

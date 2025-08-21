@@ -7,6 +7,14 @@ class MultiplayerNumberWordle {
         this.gameState = null;
         this.currentTab = 'my-guesses';
         
+        // Single player mode properties
+        this.singlePlayerMode = false;
+        this.aiNumbers = [];
+        this.playerNumbers = [];
+        this.singlePlayerHistory = [];
+        this.gameStartTime = null;
+        this.guessCount = 0;
+        
         this.initializeSocket();
         this.initializeEventListeners();
         this.updateConnectionStatus('connecting');
@@ -37,14 +45,19 @@ class MultiplayerNumberWordle {
         // Lobby events
         document.getElementById('createGame').addEventListener('click', () => this.createGame());
         document.getElementById('joinGame').addEventListener('click', () => this.joinGame());
+        document.getElementById('startSinglePlayer').addEventListener('click', () => this.startSinglePlayer());
         
         // Game setup events
         document.getElementById('setNumbers').addEventListener('click', () => this.setNumbers());
         
         // Game events
         document.getElementById('submitGuess').addEventListener('click', () => this.submitGuess());
+        document.getElementById('submitSinglePlayerGuess').addEventListener('click', () => this.submitSinglePlayerGuess());
         document.getElementById('newGame').addEventListener('click', () => this.resetGame());
         document.getElementById('newGameFromWinner').addEventListener('click', () => this.resetGame());
+        document.getElementById('newSinglePlayerGame').addEventListener('click', () => this.resetSinglePlayer());
+        document.getElementById('newSinglePlayerGameFromWinner').addEventListener('click', () => this.resetSinglePlayer());
+        document.getElementById('backToLobby').addEventListener('click', () => this.backToLobby());
         
         // History tab events
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -100,6 +113,32 @@ class MultiplayerNumberWordle {
                 
                 if (e.key === 'Enter') {
                     this.submitGuess();
+                }
+            });
+        });
+
+        // Single player guess inputs
+        const singleGuessInputs = document.querySelectorAll('.single-guess-input');
+        singleGuessInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value.length === 1) {
+                    const nextInput = singleGuessInputs[index + 1];
+                    if (nextInput) {
+                        nextInput.focus();
+                    }
+                }
+            });
+            
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && e.target.value === '') {
+                    const prevInput = singleGuessInputs[index - 1];
+                    if (prevInput) {
+                        prevInput.focus();
+                    }
+                }
+                
+                if (e.key === 'Enter') {
+                    this.submitSinglePlayerGuess();
                 }
             });
         });
@@ -398,7 +437,7 @@ class MultiplayerNumberWordle {
     }
 
     resetGame() {
-        // Reset game state
+        // Reset multiplayer game state
         this.gameId = null;
         this.playerName = null;
         this.isMyTurn = false;
@@ -444,6 +483,226 @@ class MultiplayerNumberWordle {
                 text.textContent = 'Connecting...';
                 break;
         }
+    }
+
+    // Single Player Mode Methods
+    startSinglePlayer() {
+        const playerName = document.getElementById('singlePlayerName').value.trim();
+        if (!playerName) {
+            alert('Please enter your name!');
+            return;
+        }
+
+        this.singlePlayerMode = true;
+        this.playerName = playerName;
+        this.gameStartTime = Date.now();
+        this.guessCount = 0;
+        
+        // Generate AI numbers
+        this.aiNumbers = this.generateAINumbers();
+        this.playerNumbers = [];
+        this.singlePlayerHistory = [];
+        
+        // Show single player board
+        this.showSinglePlayerBoard();
+        
+        console.log('AI Numbers:', this.aiNumbers); // For debugging
+    }
+
+    generateAINumbers() {
+        const numbers = [];
+        for (let i = 0; i < 5; i++) {
+            numbers.push(Math.floor(Math.random() * 10));
+        }
+        return numbers;
+    }
+
+    showSinglePlayerBoard() {
+        document.getElementById('gameLobby').style.display = 'none';
+        document.getElementById('singlePlayerBoard').style.display = 'block';
+        
+        document.getElementById('singlePlayerNameDisplay').textContent = this.playerName;
+        this.updateSinglePlayerHistoryDisplay();
+        
+        // Focus first input
+        document.querySelector('.single-guess-input[data-position="0"]').focus();
+    }
+
+    submitSinglePlayerGuess() {
+        const guess = this.getCurrentSinglePlayerGuess();
+        if (!this.validateGuess(guess)) {
+            alert('Please enter 5 numbers for your guess!');
+            return;
+        }
+
+        this.guessCount++;
+        
+        // Calculate feedback for player's guess
+        const playerFeedback = this.calculateFeedback(guess, this.aiNumbers);
+        
+        // Add to history
+        this.singlePlayerHistory.push({
+            type: 'player',
+            guess: [...guess],
+            feedback: playerFeedback,
+            timestamp: Date.now()
+        });
+        
+        // Check if player won
+        if (playerFeedback.correctPositions === 5) {
+            this.endSinglePlayerGame('player');
+            return;
+        }
+        
+        // AI makes a guess
+        this.makeAIGuess();
+        
+        // Update display
+        this.updateSinglePlayerHistoryDisplay();
+        this.clearSinglePlayerGuessInputs();
+        
+        // Focus first input for next player turn
+        document.querySelector('.single-guess-input[data-position="0"]').focus();
+    }
+
+    getCurrentSinglePlayerGuess() {
+        const inputs = document.querySelectorAll('.single-guess-input');
+        return Array.from(inputs).map(input => parseInt(input.value));
+    }
+
+    clearSinglePlayerGuessInputs() {
+        const inputs = document.querySelectorAll('.single-guess-input');
+        inputs.forEach(input => {
+            input.value = '';
+        });
+    }
+
+    makeAIGuess() {
+        // Simple AI: make a random guess
+        const aiGuess = this.generateAINumbers();
+        
+        // Calculate feedback for AI's guess
+        const aiFeedback = this.calculateFeedback(aiGuess, this.playerNumbers);
+        
+        // Add to history
+        this.singlePlayerHistory.push({
+            type: 'ai',
+            guess: [...aiGuess],
+            feedback: aiFeedback,
+            timestamp: Date.now()
+        });
+        
+        // Check if AI won
+        if (aiFeedback.correctPositions === 5) {
+            this.endSinglePlayerGame('ai');
+            return;
+        }
+    }
+
+    calculateFeedback(guess, targetNumbers) {
+        let correctNumbers = 0;
+        let correctPositions = 0;
+        
+        // Count correct numbers (regardless of position)
+        const guessCount = new Array(10).fill(0);
+        const targetCount = new Array(10).fill(0);
+        
+        for (let i = 0; i < 5; i++) {
+            guessCount[guess[i]]++;
+            targetCount[targetNumbers[i]]++;
+        }
+        
+        for (let i = 0; i < 10; i++) {
+            correctNumbers += Math.min(guessCount[i], targetCount[i]);
+        }
+        
+        // Count correct positions
+        for (let i = 0; i < 5; i++) {
+            if (guess[i] === targetNumbers[i]) {
+                correctPositions++;
+            }
+        }
+        
+        return {
+            correctNumbers,
+            correctPositions
+        };
+    }
+
+    endSinglePlayerGame(winner) {
+        const gameDuration = Math.floor((Date.now() - this.gameStartTime) / 1000);
+        const minutes = Math.floor(gameDuration / 60);
+        const seconds = gameDuration % 60;
+        const durationText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (winner === 'player') {
+            document.getElementById('singlePlayerWinnerText').textContent = 
+                `Congratulations! You won in ${this.guessCount} guesses!`;
+        } else {
+            document.getElementById('singlePlayerWinnerText').textContent = 
+                `The AI won! Better luck next time!`;
+        }
+        
+        document.getElementById('totalGuesses').textContent = this.guessCount;
+        document.getElementById('gameDuration').textContent = durationText;
+        
+        document.getElementById('singlePlayerBoard').style.display = 'none';
+        document.getElementById('singlePlayerWinner').style.display = 'block';
+    }
+
+    updateSinglePlayerHistoryDisplay() {
+        const container = document.getElementById('singlePlayerHistoryContainer');
+        container.innerHTML = '';
+        
+        this.singlePlayerHistory.forEach(entry => {
+            const entryElement = document.createElement('div');
+            entryElement.className = 'guess-entry';
+            
+            const playerText = entry.type === 'player' ? 'You' : 'AI';
+            const feedbackText = `Correct numbers: ${entry.feedback.correctNumbers}, Correct positions: ${entry.feedback.correctPositions}`;
+            
+            entryElement.innerHTML = `
+                <div class="guess-numbers">
+                    ${entry.guess.map(num => `<div class="guess-number">${num}</div>`).join('')}
+                </div>
+                <div class="feedback">
+                    <strong>${playerText}</strong> - ${feedbackText}
+                </div>
+            `;
+            
+            container.appendChild(entryElement);
+        });
+        
+        // Scroll to bottom
+        container.scrollTop = container.scrollHeight;
+    }
+
+    resetSinglePlayer() {
+        this.singlePlayerMode = false;
+        this.aiNumbers = [];
+        this.playerNumbers = [];
+        this.singlePlayerHistory = [];
+        this.gameStartTime = null;
+        this.guessCount = 0;
+        
+        // Clear all inputs
+        const allInputs = document.querySelectorAll('input');
+        allInputs.forEach(input => input.value = '');
+        
+        // Reset display
+        document.getElementById('singlePlayerBoard').style.display = 'none';
+        document.getElementById('singlePlayerWinner').style.display = 'none';
+        document.getElementById('gameLobby').style.display = 'block';
+        
+        // Clear history
+        document.getElementById('singlePlayerHistoryContainer').innerHTML = '';
+        
+        // Focus first input
+        document.getElementById('singlePlayerName').focus();
+    }
+
+    backToLobby() {
+        this.resetSinglePlayer();
     }
 }
 
