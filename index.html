@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Wordle - Multiplayer Edition</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Number Wordle</h1>
+            <p class="subtitle">Multiplayer Number Guessing Game!</p>
+        </header>
+
+        <!-- Game Lobby -->
+        <div class="game-lobby" id="gameLobby">
+            <h2>Join or Create a Game</h2>
+            <div class="lobby-options">
+                <div class="create-game">
+                    <h3>Create New Game</h3>
+                    <input type="text" id="createPlayerName" placeholder="Enter your name" maxlength="20">
+                    <button class="create-btn" id="createGame">Create Game</button>
+                </div>
+                
+                <div class="join-game">
+                    <h3>Join Existing Game</h3>
+                    <input type="text" id="joinPlayerName" placeholder="Enter your name" maxlength="20">
+                    <input type="text" id="gameCode" placeholder="Enter game code" maxlength="6">
+                    <button class="join-btn" id="joinGame">Join Game</button>
+                </div>
+            </div>
+            
+            <div class="active-games" id="activeGames">
+                <h3>Active Games</h3>
+                <div class="games-list" id="gamesList">
+                    <!-- Active games will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Setup -->
+        <div class="game-setup" id="gameSetup" style="display: none;">
+            <h2>Set Up Your Numbers</h2>
+            <div class="game-info">
+                <p><strong>Game Code:</strong> <span id="gameCodeDisplay"></span></p>
+                <p><strong>Players:</strong> <span id="playersList"></span></p>
+                <p id="waitingMessage">Waiting for other player to join...</p>
+            </div>
+            
+            <div class="player-inputs">
+                <div class="player-section">
+                    <h3 id="currentPlayerName">Your Numbers</h3>
+                    <div class="number-inputs">
+                        <input type="number" min="0" max="9" class="number-input" data-position="0">
+                        <input type="number" min="0" max="9" class="number-input" data-position="1">
+                        <input type="number" min="0" max="9" class="number-input" data-position="2">
+                        <input type="number" min="0" max="9" class="number-input" data-position="3">
+                        <input type="number" min="0" max="9" class="number-input" data-position="4">
+                    </div>
+                    <button class="set-numbers-btn" id="setNumbers">Set Numbers</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Board -->
+        <div class="game-board" id="gameBoard" style="display: none;">
+            <div class="game-header">
+                <div class="game-code">
+                    <strong>Game:</strong> <span id="gameCodeGame"></span>
+                </div>
+                <div class="current-player">
+                    <h3>Current Turn: <span id="currentPlayer">Player 1</span></h3>
+                </div>
+            </div>
+            
+            <div class="guess-section">
+                <h3>Make Your Guess</h3>
+                <div class="guess-inputs">
+                    <input type="number" min="0" max="9" class="guess-input" data-position="0">
+                    <input type="number" min="0" max="9" class="guess-input" data-position="1">
+                    <input type="number" min="0" max="9" class="guess-input" data-position="2">
+                    <input type="number" min="0" max="9" class="guess-input" data-position="3">
+                    <input type="number" min="0" max="9" class="guess-input" data-position="4">
+                </div>
+                <button class="submit-guess" id="submitGuess">Submit Guess</button>
+            </div>
+
+            <div class="game-history">
+                <div class="history-tabs">
+                    <button class="tab-btn active" data-tab="my-guesses">My Guesses</button>
+                    <button class="tab-btn" data-tab="opponent-guesses">Opponent's Guesses</button>
+                </div>
+                <div class="history-container" id="historyContainer">
+                    <!-- Game history will be populated here -->
+                </div>
+            </div>
+
+            <button class="new-game-btn" id="newGame">New Game</button>
+        </div>
+
+        <!-- Winner Screen -->
+        <div class="winner-screen" id="winnerScreen" style="display: none;">
+            <h2>🎉 Congratulations! 🎉</h2>
+            <p id="winnerText"></p>
+            <button class="new-game-btn" id="newGameFromWinner">Play Again</button>
+        </div>
+
+        <!-- Connection Status -->
+        <div class="connection-status" id="connectionStatus">
+            <span class="status-indicator" id="statusIndicator"></span>
+            <span class="status-text" id="statusText">Connecting...</span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 

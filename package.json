@@ -1,0 +1,22 @@
+{
+  "name": "number-wordle-multiplayer",
+  "version": "1.0.0",
+  "description": "Multiplayer Number Wordle game with real-time internet play",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "echo 'No build step required'"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": ["game", "multiplayer", "wordle", "numbers"],
+  "author": "Your Name",
+  "license": "MIT"
+} 

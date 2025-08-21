@@ -1,0 +1,460 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 40px;
+    color: white;
+}
+
+header h1 {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.game-lobby, .game-setup, .game-board, .winner-screen {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+/* Lobby Styles */
+.lobby-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin: 30px 0;
+}
+
+.create-game, .join-game {
+    text-align: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 15px;
+    border: 2px solid #e1e5e9;
+}
+
+.create-game h3, .join-game h3 {
+    margin-bottom: 20px;
+    color: #667eea;
+    font-size: 1.3rem;
+}
+
+.create-game input, .join-game input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 2px solid #e1e5e9;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.create-game input:focus, .join-game input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.create-btn, .join-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 20px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.create-btn:hover, .join-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.active-games {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.active-games h3 {
+    margin-bottom: 20px;
+    color: #667eea;
+}
+
+.games-list {
+    display: grid;
+    gap: 15px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.game-item {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    border: 2px solid #e1e5e9;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.game-item:hover {
+    border-color: #667eea;
+    background: white;
+    transform: translateY(-2px);
+}
+
+.game-item h4 {
+    color: #667eea;
+    margin-bottom: 5px;
+}
+
+.game-item p {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* Game Setup Styles */
+.game-info {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.game-info p {
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.game-info strong {
+    color: #667eea;
+}
+
+.player-inputs {
+    display: flex;
+    justify-content: center;
+    margin: 30px 0;
+}
+
+.player-section {
+    text-align: center;
+}
+
+.player-section h3 {
+    margin-bottom: 20px;
+    color: #667eea;
+    font-size: 1.5rem;
+}
+
+.number-inputs, .guess-inputs {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.number-input, .guess-input {
+    width: 60px;
+    height: 60px;
+    border: 3px solid #e1e5e9;
+    border-radius: 15px;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.number-input:focus, .guess-input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: white;
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.set-numbers-btn, .start-btn, .submit-guess, .new-game-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 25px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: block;
+    margin: 0 auto;
+}
+
+.set-numbers-btn:hover, .start-btn:hover, .submit-guess:hover, .new-game-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+}
+
+.set-numbers-btn:active, .start-btn:active, .submit-guess:active, .new-game-btn:active {
+    transform: translateY(0);
+}
+
+/* Game Board Styles */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+}
+
+.game-code {
+    font-size: 1.1rem;
+}
+
+.current-player h3 {
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.guess-section {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.guess-section h3 {
+    margin-bottom: 20px;
+    color: #667eea;
+}
+
+.game-history {
+    margin-top: 30px;
+}
+
+.history-tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    gap: 10px;
+}
+
+.tab-btn {
+    background: #f8f9fa;
+    border: 2px solid #e1e5e9;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+
+.tab-btn.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.tab-btn:hover:not(.active) {
+    border-color: #667eea;
+    background: white;
+}
+
+.history-container {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 15px;
+}
+
+.guess-entry {
+    background: white;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    border-left: 5px solid #667eea;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.guess-numbers {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.guess-number {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    background: white;
+}
+
+.feedback {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.winner-screen {
+    text-align: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.winner-screen h2 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+}
+
+.winner-screen p {
+    font-size: 1.2rem;
+    margin-bottom: 30px;
+    opacity: 0.9;
+}
+
+/* Connection Status */
+.connection-status {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    padding: 10px 15px;
+    border-radius: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ccc;
+}
+
+.status-indicator.connected {
+    background: #28a745;
+}
+
+.status-indicator.disconnected {
+    background: #dc3545;
+}
+
+.status-indicator.connecting {
+    background: #ffc107;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+    
+    .lobby-options {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .game-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .number-inputs, .guess-inputs {
+        gap: 8px;
+    }
+    
+    .number-input, .guess-input {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+    
+    header h1 {
+        font-size: 2.5rem;
+    }
+    
+    .connection-status {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        justify-content: center;
+    }
+}
+
+/* Animation for new guesses */
+.guess-entry {
+    animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Custom scrollbar */
+.history-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.history-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.history-container::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 10px;
+}
+
+.history-container::-webkit-scrollbar-thumb:hover {
+    background: #5a6fd8;
+} 
