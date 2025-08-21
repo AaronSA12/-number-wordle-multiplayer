@@ -300,6 +300,9 @@ class MultiplayerNumberWordle {
             case 'playerJoined':
                 this.handlePlayerJoined(data);
                 break;
+            case 'secondPlayerJoined':
+                this.handleSecondPlayerJoined(data);
+                break;
             case 'numbersSet':
                 this.handleNumbersSet(data);
                 break;
@@ -326,6 +329,18 @@ class MultiplayerNumberWordle {
         } else {
             playersList.textContent = this.playerName;
         }
+    }
+
+    handleSecondPlayerJoined(data) {
+        console.log('Second player joined:', data);
+        const playersList = document.getElementById('playersList');
+        playersList.textContent = `${this.playerName} and ${data.playerName}`;
+        
+        // Update waiting message
+        document.getElementById('waitingMessage').textContent = 'Both players joined! Set your numbers to start the game.';
+        
+        // Request updated game state
+        this.socket.emit('getGameState');
     }
 
     handleNumbersSet(data) {

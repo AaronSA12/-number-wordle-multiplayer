@@ -169,11 +169,16 @@ io.on('connection', (socket) => {
         let game = games.get(gameId);
         if (!game) {
             // Create new game with this player
+            console.log(`Creating new game ${gameId} with player ${socket.id}`);
             game = new Game(gameId, socket.id, null);
             games.set(gameId, game);
         } else if (!game.player2Id) {
             // Join existing game
+            console.log(`Player ${socket.id} joining existing game ${gameId} as Player 2`);
             game.player2Id = socket.id;
+        } else {
+            console.log(`Game ${gameId} is full, cannot join`);
+            return;
         }
         
         // Notify players
@@ -187,6 +192,7 @@ io.on('connection', (socket) => {
         if (game) {
             console.log(`Game ${gameId}: Player 1: ${game.player1Id}, Player 2: ${game.player2Id}`);
             
+            // Always send state to Player 1
             const player1Socket = io.sockets.sockets.get(game.player1Id);
             if (player1Socket) {
                 const player1State = game.getGameState(game.player1Id);
@@ -194,6 +200,7 @@ io.on('connection', (socket) => {
                 player1Socket.emit('gameState', player1State);
             }
             
+            // If Player 2 exists, send state to them too
             if (game.player2Id) {
                 const player2Socket = io.sockets.sockets.get(game.player2Id);
                 if (player2Socket) {
@@ -201,6 +208,16 @@ io.on('connection', (socket) => {
                     console.log(`Sending state to Player 2:`, player2State);
                     player2Socket.emit('gameState', player2State);
                 }
+            }
+            
+            // If this is the second player joining, also send a special update
+            if (game.player2Id && game.player2Id === socket.id) {
+                console.log(`Second player joined, sending special update to both players`);
+                io.to(gameId).emit('gameUpdate', {
+                    type: 'secondPlayerJoined',
+                    playerId: socket.id,
+                    playerName: playerName
+                });
             }
         }
         
