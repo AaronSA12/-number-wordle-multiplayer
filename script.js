@@ -291,6 +291,9 @@ class MultiplayerNumberWordle {
         inputs.forEach(input => {
             input.value = '';
         });
+        
+        // Focus first input box for next guess
+        document.querySelector('.guess-input[data-position="0"]').focus();
     }
 
     handleGameUpdate(data) {
