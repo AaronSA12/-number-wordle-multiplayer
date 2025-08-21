@@ -220,21 +220,41 @@ io.on('connection', (socket) => {
         const result = game.makeGuess(socket.id, guess);
         if (!result) return;
         
-        // Send result to both players
+        // Send result to both players with their respective game states
         io.to(player.gameId).emit('gameUpdate', {
             type: 'guessResult',
             playerId: socket.id,
             guess: guess,
-            feedback: result,
-            gameState: game.getGameState(socket.id)
+            feedback: result
         });
+        
+        // Send updated game state to both players
+        const player1Socket = io.sockets.sockets.get(game.player1Id);
+        const player2Socket = io.sockets.sockets.get(game.player2Id);
+        
+        if (player1Socket) {
+            player1Socket.emit('gameState', game.getGameState(game.player1Id));
+        }
+        if (player2Socket) {
+            player2Socket.emit('gameState', game.getGameState(game.player2Id));
+        }
         
         if (result.gameOver) {
             io.to(player.gameId).emit('gameUpdate', {
                 type: 'gameOver',
-                winner: result.winner,
-                gameState: game.getGameState(socket.id)
+                winner: result.winner
             });
+            
+            // Send final game state to both players
+            const player1Socket = io.sockets.sockets.get(game.player1Id);
+            const player2Socket = io.sockets.sockets.get(game.player2Id);
+            
+            if (player1Socket) {
+                player1Socket.emit('gameState', game.getGameState(game.player1Id));
+            }
+            if (player2Socket) {
+                player2Socket.emit('gameState', game.getGameState(game.player2Id));
+            }
         }
     });
 

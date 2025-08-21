@@ -274,14 +274,11 @@ class MultiplayerNumberWordle {
 
     handlePlayerJoined(data) {
         const playersList = document.getElementById('playersList');
-        if (data.gameState.gameStarted) {
+        if (data.gameState && data.gameState.gameStarted) {
             playersList.textContent = `${data.playerName} and ${this.playerName}`;
+            this.updateGameState(data.gameState);
         } else {
             playersList.textContent = this.playerName;
-        }
-        
-        if (data.gameState.gameStarted) {
-            this.updateGameState(data.gameState);
         }
     }
 
@@ -289,6 +286,9 @@ class MultiplayerNumberWordle {
         if (data.playerId !== this.socket.id) {
             document.getElementById('waitingMessage').textContent = 'Other player has set their numbers. Waiting for game to start...';
         }
+        
+        // Request updated game state
+        this.socket.emit('getGameState');
     }
 
     handleGameStarted(data) {
@@ -297,7 +297,7 @@ class MultiplayerNumberWordle {
     }
 
     handleGuessResult(data) {
-        this.updateGameState(data.gameState);
+        // Game state will be updated separately via gameState event
         this.updateHistoryDisplay();
         
         if (data.feedback.gameOver) {
