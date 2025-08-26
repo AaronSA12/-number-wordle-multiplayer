@@ -132,6 +132,13 @@ class Game {
         const isPlayer1 = playerId === this.player1Id;
         const opponentId = isPlayer1 ? this.player2Id : this.player1Id;
         
+        // Get player's own numbers
+        const myNumbers = isPlayer1 ? this.player1Numbers : this.player2Numbers;
+        
+        // Get opponent's numbers and check for duplicates
+        const opponentNumbers = isPlayer1 ? this.player2Numbers : this.player1Numbers;
+        const hasDuplicates = opponentNumbers ? this.hasDuplicates(opponentNumbers) : false;
+        
         const gameState = {
             gameId: this.gameId,
             currentTurn: this.currentTurn,
@@ -140,12 +147,24 @@ class Game {
             isMyTurn: this.currentTurn === playerId,
             myHistory: this.gameHistory[playerId] || [],
             opponentHistory: this.gameHistory[opponentId] || [],
-            gameStarted: this.gameStatus === 'active' || this.gameStatus === 'finished'
+            gameStarted: this.gameStatus === 'active' || this.gameStatus === 'finished',
+            myNumbers: myNumbers,
+            opponentHasDuplicates: hasDuplicates
         };
         
         // console.log(`Game state for ${playerId}: isMyTurn=${gameState.isMyTurn}, currentTurn=${this.currentTurn}`);
         
         return gameState;
+    }
+
+    hasDuplicates(numbers) {
+        if (!numbers) return false;
+        const seen = new Set();
+        for (let num of numbers) {
+            if (seen.has(num)) return true;
+            seen.add(num);
+        }
+        return false;
     }
 }
 

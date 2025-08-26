@@ -398,6 +398,8 @@ class MultiplayerNumberWordle {
         if (state.gameStarted) {
             this.updateCurrentPlayerDisplay();
             this.updateHistoryDisplay();
+            this.updateMyNumbersDisplay(state);
+            this.updateDuplicateWarning(state);
         }
         
         // Fallback: if game is started but board not shown, force show it
@@ -405,6 +407,34 @@ class MultiplayerNumberWordle {
             console.log('Fallback: forcing game board to show');
             this.showGameBoard();
             this.gameBoardShown = true;
+        }
+    }
+
+    updateMyNumbersDisplay(state) {
+        const container = document.getElementById('myNumbersDisplay');
+        if (!container) return;
+        
+        if (state.myNumbers && state.myNumbers.length === 5) {
+            container.innerHTML = '';
+            state.myNumbers.forEach(num => {
+                const numberElement = document.createElement('div');
+                numberElement.className = 'my-number';
+                numberElement.textContent = num;
+                container.appendChild(numberElement);
+            });
+        } else {
+            container.innerHTML = '<p>Numbers not set yet</p>';
+        }
+    }
+
+    updateDuplicateWarning(state) {
+        const warning = document.getElementById('duplicateWarning');
+        if (!warning) return;
+        
+        if (state.opponentHasDuplicates) {
+            warning.style.display = 'block';
+        } else {
+            warning.style.display = 'none';
         }
     }
 
@@ -470,6 +500,12 @@ class MultiplayerNumberWordle {
         document.getElementById('gameCodeGame').textContent = this.gameId;
         this.updateCurrentPlayerDisplay();
         this.updateHistoryDisplay();
+        
+        // Update numbers display and duplicate warning if game state exists
+        if (this.gameState) {
+            this.updateMyNumbersDisplay(this.gameState);
+            this.updateDuplicateWarning(this.gameState);
+        }
         
         // Focus first guess input
         document.querySelector('.guess-input[data-position="0"]').focus();
