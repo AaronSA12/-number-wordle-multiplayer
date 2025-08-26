@@ -17,20 +17,63 @@ class MultiplayerNumberWordle {
         this.gameBoardShown = false;
         this.notes = {}; // Track notes for each number (0-9)
         
+        // Mobile persistence properties
+        this.lastGameState = null;
+        this.recoveryAttempts = 0;
+        this.maxRecoveryAttempts = 3;
+        
         this.initializeSocket();
         this.initializeEventListeners();
         this.updateConnectionStatus('connecting');
     }
 
     initializeSocket() {
-        this.socket = io();
-        
-        this.socket.on('connect', () => {
-            this.updateConnectionStatus('connected');
-            this.loadActiveGames();
+        // Configure Socket.IO for mobile persistence
+        this.socket = io({
+            transports: ['websocket', 'polling'],
+            upgrade: true,
+            rememberUpgrade: true,
+            timeout: 20000,
+            forceNew: false
         });
         
-        this.socket.on('disconnect', () => {
+        this.socket.on('connect', () => {
+            console.log('Connected to server');
+            this.updateConnectionStatus('connected');
+            this.loadActiveGames();
+            
+            // Try to recover game state if we were in a game
+            this.attemptGameRecovery();
+        });
+        
+        this.socket.on('disconnect', (reason) => {
+            console.log('Disconnected from server:', reason);
+            this.updateConnectionStatus('disconnected');
+            
+            // Store current game state for recovery
+            this.storeGameStateForRecovery();
+        });
+        
+        this.socket.on('reconnect', (attemptNumber) => {
+            console.log('Reconnected after', attemptNumber, 'attempts');
+            this.updateConnectionStatus('connected');
+            
+            // Attempt to recover game state
+            this.attemptGameRecovery();
+        });
+        
+        this.socket.on('reconnect_attempt', (attemptNumber) => {
+            console.log('Reconnection attempt', attemptNumber);
+            this.updateConnectionStatus('connecting');
+        });
+        
+        this.socket.on('reconnect_error', (error) => {
+            console.log('Reconnection error:', error);
+            this.updateConnectionStatus('disconnected');
+        });
+        
+        this.socket.on('reconnect_failed', () => {
+            console.log('Reconnection failed');
             this.updateConnectionStatus('disconnected');
         });
         
@@ -42,6 +85,14 @@ class MultiplayerNumberWordle {
             console.log('Received game state:', state);
             this.updateGameState(state);
         });
+        
+        // Handle game recovery responses
+        this.socket.on('recoveryResponse', (data) => {
+            this.handleRecoveryResponse(data.success, data.gameState);
+        });
+        
+        // Handle page visibility changes (mobile app switching)
+        this.setupVisibilityHandling();
     }
 
     initializeEventListeners() {
@@ -490,6 +541,136 @@ class MultiplayerNumberWordle {
     clearAllNotes() {
         this.notes = {};
         this.updateNotesDisplay();
+    }
+
+    setupVisibilityHandling() {
+        // Handle page visibility changes (mobile app switching)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                console.log('Page hidden - storing game state');
+                this.storeGameStateForRecovery();
+            } else {
+                console.log('Page visible - checking connection');
+                if (!this.socket.connected) {
+                    console.log('Socket not connected, attempting reconnection');
+                    this.socket.connect();
+                }
+            }
+        });
+
+        // Handle beforeunload (page refresh/close)
+        window.addEventListener('beforeunload', () => {
+            this.storeGameStateForRecovery();
+        });
+
+        // Handle mobile-specific events
+        if ('onpagehide' in window) {
+            window.addEventListener('pagehide', () => {
+                this.storeGameStateForRecovery();
+            });
+        }
+
+        // Handle online/offline events
+        window.addEventListener('online', () => {
+            console.log('Device came online');
+            if (!this.socket.connected) {
+                this.socket.connect();
+            }
+        });
+
+        window.addEventListener('offline', () => {
+            console.log('Device went offline');
+            this.updateConnectionStatus('disconnected');
+        });
+    }
+
+    storeGameStateForRecovery() {
+        if (this.gameId && this.gameState) {
+            const recoveryData = {
+                gameId: this.gameId,
+                playerName: this.playerName,
+                gameState: this.gameState,
+                notes: this.notes,
+                timestamp: Date.now()
+            };
+            
+            try {
+                localStorage.setItem('numberWordleRecovery', JSON.stringify(recoveryData));
+                console.log('Game state stored for recovery');
+            } catch (error) {
+                console.log('Could not store game state:', error);
+            }
+        }
+    }
+
+    attemptGameRecovery() {
+        if (this.recoveryAttempts >= this.maxRecoveryAttempts) {
+            console.log('Max recovery attempts reached');
+            return;
+        }
+
+        try {
+            const recoveryData = localStorage.getItem('numberWordleRecovery');
+            if (recoveryData) {
+                const data = JSON.parse(recoveryData);
+                const timeSinceStored = Date.now() - data.timestamp;
+                
+                // Only attempt recovery if data is less than 1 hour old
+                if (timeSinceStored < 3600000 && data.gameId && data.playerName) {
+                    console.log('Attempting game recovery for:', data.gameId);
+                    
+                    // Try to rejoin the game
+                    this.socket.emit('attemptRecovery', {
+                        gameId: data.gameId,
+                        playerName: data.playerName
+                    });
+                    
+                    this.recoveryAttempts++;
+                } else {
+                    console.log('Recovery data too old, clearing');
+                    localStorage.removeItem('numberWordleRecovery');
+                }
+            }
+        } catch (error) {
+            console.log('Error during game recovery:', error);
+        }
+    }
+
+    handleRecoveryResponse(success, gameState) {
+        if (success && gameState) {
+            console.log('Game recovery successful');
+            this.gameId = gameState.gameId;
+            this.playerName = gameState.playerName;
+            this.gameState = gameState;
+            this.gameBoardShown = true;
+            
+            // Restore notes if available
+            try {
+                const recoveryData = localStorage.getItem('numberWordleRecovery');
+                if (recoveryData) {
+                    const data = JSON.parse(recoveryData);
+                    if (data.notes) {
+                        this.notes = data.notes;
+                    }
+                }
+            } catch (error) {
+                console.log('Could not restore notes:', error);
+            }
+            
+            // Show the game board
+            this.showGameBoard();
+            this.updateGameState(gameState);
+            
+            // Clear recovery data
+            localStorage.removeItem('numberWordleRecovery');
+            this.recoveryAttempts = 0;
+            
+            console.log('Game recovered successfully');
+        } else {
+            console.log('Game recovery failed');
+            this.recoveryAttempts = 0;
+            localStorage.removeItem('numberWordleRecovery');
+        }
     }
 
     updateCurrentPlayerDisplay() {

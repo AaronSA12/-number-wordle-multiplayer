@@ -352,6 +352,51 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Handle game recovery attempts
+    socket.on('attemptRecovery', (data) => {
+        const { gameId, playerName } = data;
+        console.log(`Recovery attempt for game ${gameId} by ${playerName}`);
+        
+        const game = games.get(gameId);
+        if (!game) {
+            console.log(`Game ${gameId} not found for recovery`);
+            socket.emit('recoveryResponse', { success: false });
+            return;
+        }
+        
+        // Check if this player was in this game
+        const wasPlayer1 = game.player1Id === socket.id || 
+                          (game.player1Id && players.get(game.player1Id)?.name === playerName);
+        const wasPlayer2 = game.player2Id === socket.id || 
+                          (game.player2Id && players.get(game.player2Id)?.name === playerName);
+        
+        if (!wasPlayer1 && !wasPlayer2) {
+            console.log(`Player ${playerName} was not in game ${gameId}`);
+            socket.emit('recoveryResponse', { success: false });
+            return;
+        }
+        
+        // Update player info and rejoin the game
+        const player = players.get(socket.id);
+        if (player) {
+            player.gameId = gameId;
+            player.name = playerName;
+        }
+        
+        socket.join(gameId);
+        
+        // Send recovery response with current game state
+        const playerId = wasPlayer1 ? game.player1Id : game.player2Id;
+        const gameState = game.getGameState(playerId);
+        
+        socket.emit('recoveryResponse', { 
+            success: true, 
+            gameState: gameState 
+        });
+        
+        console.log(`Recovery successful for ${playerName} in game ${gameId}`);
+    });
+
     // Get game state
     socket.on('getGameState', () => {
         const player = players.get(socket.id);
