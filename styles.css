@@ -292,6 +292,131 @@ header h1 {
     font-weight: 600;
 }
 
+.notes-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    border-radius: 15px;
+    text-align: center;
+}
+
+.notes-section h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.notes-instruction {
+    margin: 0 0 20px 0;
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.notes-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.note-number {
+    width: 50px;
+    height: 50px;
+    border: 2px solid #ddd;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+    color: #333;
+}
+
+.note-number:hover {
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.note-number.definitely-in {
+    background: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.note-number.definitely-not {
+    background: #dc3545;
+    color: white;
+    border-color: #dc3545;
+}
+
+.note-number.unknown {
+    background: white;
+    color: #333;
+    border-color: #ddd;
+}
+
+.notes-legend {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #ddd;
+}
+
+.legend-color.definitely-in {
+    background: #28a745;
+    border-color: #28a745;
+}
+
+.legend-color.definitely-not {
+    background: #dc3545;
+    border-color: #dc3545;
+}
+
+.legend-color.unknown {
+    background: white;
+    border-color: #ddd;
+}
+
+.clear-notes-btn {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.clear-notes-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 154, 158, 0.4);
+}
+
 .game-code {
     font-size: 1.1rem;
 }

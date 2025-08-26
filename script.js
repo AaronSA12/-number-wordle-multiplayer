@@ -15,6 +15,7 @@ class MultiplayerNumberWordle {
         this.gameStartTime = null;
         this.guessCount = 0;
         this.gameBoardShown = false;
+        this.notes = {}; // Track notes for each number (0-9)
         
         this.initializeSocket();
         this.initializeEventListeners();
@@ -68,6 +69,9 @@ class MultiplayerNumberWordle {
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', (e) => this.switchTab(e.target.dataset.tab));
         });
+        
+        // Notes events
+        document.getElementById('clearNotes').addEventListener('click', () => this.clearAllNotes());
         
         // Input handling
         this.setupInputHandling();
@@ -438,6 +442,56 @@ class MultiplayerNumberWordle {
         }
     }
 
+    initializeNotesGrid() {
+        const container = document.getElementById('notesGrid');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        // Create grid for numbers 0-9
+        for (let i = 0; i < 10; i++) {
+            const noteElement = document.createElement('div');
+            noteElement.className = 'note-number unknown';
+            noteElement.textContent = i;
+            noteElement.dataset.number = i;
+            
+            noteElement.addEventListener('click', () => this.toggleNote(i));
+            
+            container.appendChild(noteElement);
+        }
+        
+        this.updateNotesDisplay();
+    }
+
+    toggleNote(number) {
+        // Cycle through: unknown -> definitely-in -> definitely-not -> unknown
+        if (!this.notes[number] || this.notes[number] === 'unknown') {
+            this.notes[number] = 'definitely-in';
+        } else if (this.notes[number] === 'definitely-in') {
+            this.notes[number] = 'definitely-not';
+        } else {
+            this.notes[number] = 'unknown';
+        }
+        
+        this.updateNotesDisplay();
+    }
+
+    updateNotesDisplay() {
+        const noteElements = document.querySelectorAll('.note-number');
+        noteElements.forEach(element => {
+            const number = parseInt(element.dataset.number);
+            const noteState = this.notes[number] || 'unknown';
+            
+            // Remove all classes and add the current one
+            element.className = `note-number ${noteState}`;
+        });
+    }
+
+    clearAllNotes() {
+        this.notes = {};
+        this.updateNotesDisplay();
+    }
+
     updateCurrentPlayerDisplay() {
         const currentPlayerElement = document.getElementById('currentPlayer');
         if (this.isMyTurn) {
@@ -507,6 +561,9 @@ class MultiplayerNumberWordle {
             this.updateDuplicateWarning(this.gameState);
         }
         
+        // Initialize notes grid
+        this.initializeNotesGrid();
+        
         // Focus first guess input
         document.querySelector('.guess-input[data-position="0"]').focus();
     }
@@ -518,6 +575,7 @@ class MultiplayerNumberWordle {
         this.isMyTurn = false;
         this.gameState = null;
         this.gameBoardShown = false;
+        this.notes = {};
         
         // Clear all inputs
         const allInputs = document.querySelectorAll('input');
