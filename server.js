@@ -38,6 +38,11 @@ class Game {
         this.gameStatus = 'waiting'; // waiting, active, finished
         this.winner = null;
         this.createdAt = Date.now();
+        
+        // Grace period properties
+        this.player1DisconnectedAt = null;
+        this.player2DisconnectedAt = null;
+        this.gracePeriodActive = false;
     }
 
     addPlayerNumbers(playerId, numbers) {
@@ -166,6 +171,79 @@ class Game {
         }
         return false;
     }
+
+    isPlayerDisconnected(playerId) {
+        if (playerId === this.player1Id) {
+            return this.player1DisconnectedAt !== null;
+        } else if (playerId === this.player2Id) {
+            return this.player2DisconnectedAt !== null;
+        }
+        return false;
+    }
+
+    canRejoin(playerId, playerName) {
+        // Check if this player can rejoin (was disconnected and grace period not expired)
+        if (playerId === this.player1Id || 
+            (this.player1DisconnectedAt && players.get(this.player1Id)?.name === playerName)) {
+            return this.player1DisconnectedAt !== null && 
+                   (Date.now() - this.player1DisconnectedAt) < 300000; // 5 minutes
+        } else if (playerId === this.player2Id || 
+                   (this.player2DisconnectedAt && players.get(this.player2Id)?.name === playerName)) {
+            return this.player2DisconnectedAt !== null && 
+                   (Date.now() - this.player2DisconnectedAt) < 300000; // 5 minutes
+        }
+        return false;
+    }
+
+    rejoinPlayer(playerId, playerName) {
+        // Reconnect a player who was in grace period
+        if (this.canRejoin(playerId, playerName)) {
+            if (this.player1DisconnectedAt && players.get(this.player1Id)?.name === playerName) {
+                this.player1Id = playerId;
+                this.player1DisconnectedAt = null;
+                console.log(`Player 1 ${playerName} rejoined game ${this.gameId}`);
+            } else if (this.player2DisconnectedAt && players.get(this.player2Id)?.name === playerName) {
+                this.player2Id = playerId;
+                this.player2DisconnectedAt = null;
+                console.log(`Player 2 ${playerName} rejoined game ${this.gameId}`);
+            }
+            
+            // Update game history for the rejoining player
+            if (!this.gameHistory[playerId]) {
+                this.gameHistory[playerId] = [];
+            }
+            
+            return true;
+        }
+        return false;
+    }
+}
+
+// Grace period management
+function checkGracePeriodExpired(gameId) {
+    const game = games.get(gameId);
+    if (!game) return;
+    
+    const now = Date.now();
+    const gracePeriodExpired = 300000; // 5 minutes
+    
+    // Check if grace period has expired for either player
+    if (game.player1DisconnectedAt && (now - game.player1DisconnectedAt) >= gracePeriodExpired) {
+        console.log(`Grace period expired for Player 1 in game ${gameId}`);
+        // Game will be cleaned up when both players are gone
+    }
+    
+    if (game.player2DisconnectedAt && (now - game.player2DisconnectedAt) >= gracePeriodExpired) {
+        console.log(`Grace period expired for Player 2 in game ${gameId}`);
+        // Game will be cleaned up when both players are gone
+    }
+    
+    // If both players are disconnected and grace period expired, clean up
+    if ((game.player1DisconnectedAt && (now - game.player1DisconnectedAt) >= gracePeriodExpired) &&
+        (game.player2DisconnectedAt && (now - game.player2DisconnectedAt) >= gracePeriodExpired)) {
+        console.log(`Grace period expired for both players, cleaning up game ${gameId}`);
+        games.delete(gameId);
+    }
 }
 
 // Socket.IO connection handling
@@ -198,8 +276,8 @@ io.on('connection', (socket) => {
             console.log(`Creating new game ${gameId} with player ${socket.id}`);
             game = new Game(gameId, socket.id, null);
             games.set(gameId, game);
-        } else if (!game.player2Id) {
-            // Join existing game
+        } else if (!game.player2Id && !game.player2DisconnectedAt) {
+            // Join existing game as Player 2
             console.log(`Player ${socket.id} joining existing game ${gameId} as Player 2`);
             game.player2Id = socket.id;
             
@@ -207,8 +285,28 @@ io.on('connection', (socket) => {
             if (!game.gameHistory[socket.id]) {
                 game.gameHistory[socket.id] = [];
             }
+        } else if (game.canRejoin(socket.id, playerName)) {
+            // Player is rejoining during grace period
+            console.log(`Player ${playerName} rejoining game ${gameId} during grace period`);
+            if (game.rejoinPlayer(socket.id, playerName)) {
+                // Successfully rejoined
+                console.log(`Player ${playerName} successfully rejoined game ${gameId}`);
+                
+                // Notify other player about reconnection
+                const otherPlayerId = game.player1Id === socket.id ? game.player2Id : game.player1Id;
+                if (otherPlayerId) {
+                    io.to(otherPlayerId).emit('gameUpdate', {
+                        type: 'playerReconnected',
+                        playerId: socket.id,
+                        playerName: playerName
+                    });
+                }
+            } else {
+                console.log(`Player ${playerName} could not rejoin game ${gameId}`);
+                return;
+            }
         } else {
-            console.log(`Game ${gameId} is full, cannot join`);
+            console.log(`Game ${gameId} is full or grace period expired, cannot join`);
             return;
         }
         
@@ -416,22 +514,42 @@ io.on('connection', (socket) => {
         if (player && player.gameId) {
             const game = games.get(player.gameId);
             if (game) {
-                // Notify other player
-                const otherPlayerId = game.player1Id === socket.id ? game.player2Id : game.player1Id;
-                if (otherPlayerId) {
+                // Mark the disconnected player but don't remove them immediately
+                const isPlayer1 = game.player1Id === socket.id;
+                const otherPlayerId = isPlayer1 ? game.player2Id : game.player1Id;
+                
+                if (otherPlayerId && players.has(otherPlayerId)) {
+                    // Set disconnect timestamp and start grace period
+                    if (isPlayer1) {
+                        game.player1DisconnectedAt = Date.now();
+                        game.player1Id = null; // Clear the ID but keep the game
+                    } else {
+                        game.player2DisconnectedAt = Date.now();
+                        game.player2Id = null; // Clear the ID but keep the game
+                    }
+                    
+                    // Notify remaining player about disconnect
                     io.to(otherPlayerId).emit('gameUpdate', {
                         type: 'playerDisconnected',
-                        playerId: socket.id
+                        playerId: socket.id,
+                        playerName: player.name,
+                        gracePeriod: true
                     });
-                }
-                
-                // Clean up game if both players are gone
-                if (!otherPlayerId || !players.has(otherPlayerId)) {
+                    
+                    // Start grace period timer (5 minutes)
+                    setTimeout(() => {
+                        this.checkGracePeriodExpired(game.gameId);
+                    }, 300000); // 5 minutes
+                    
+                    console.log(`Player ${player.name} disconnected, grace period started for game ${game.gameId}`);
+                } else {
+                    // Both players gone, clean up game
                     games.delete(player.gameId);
                 }
             }
         }
         
+        // Remove player from tracking but keep game alive
         players.delete(socket.id);
     });
 });

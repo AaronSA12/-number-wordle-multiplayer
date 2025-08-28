@@ -91,6 +91,11 @@ class MultiplayerNumberWordle {
             this.handleRecoveryResponse(data.success, data.gameState);
         });
         
+        // Handle player reconnection
+        this.socket.on('playerReconnected', (data) => {
+            this.handlePlayerReconnected(data);
+        });
+        
         // Handle page visibility changes (mobile app switching)
         this.setupVisibilityHandling();
     }
@@ -374,6 +379,9 @@ class MultiplayerNumberWordle {
             case 'playerDisconnected':
                 this.handlePlayerDisconnected(data);
                 break;
+            case 'playerReconnected':
+                this.handlePlayerReconnected(data);
+                break;
         }
     }
 
@@ -434,8 +442,136 @@ class MultiplayerNumberWordle {
     }
 
     handlePlayerDisconnected(data) {
-        alert('The other player has disconnected from the game.');
-        this.resetGame();
+        if (data.gracePeriod) {
+            // Show grace period message instead of immediately ending game
+            this.showGracePeriodMessage(data.playerName);
+        } else {
+            alert('The other player has disconnected from the game.');
+            this.resetGame();
+        }
+    }
+
+    showGracePeriodMessage(playerName) {
+        // Create or update grace period message
+        let graceMessage = document.getElementById('gracePeriodMessage');
+        if (!graceMessage) {
+            graceMessage = document.createElement('div');
+            graceMessage.id = 'gracePeriodMessage';
+            graceMessage.className = 'grace-period-message';
+            graceMessage.innerHTML = `
+                <div class="grace-period-content">
+                    <h3>⏰ Player Disconnected</h3>
+                    <p><strong>${playerName}</strong> has disconnected from the game.</p>
+                    <p>You can wait up to <strong>5 minutes</strong> for them to rejoin.</p>
+                    <div class="grace-period-timer" id="gracePeriodTimer">5:00</div>
+                    <p class="grace-period-note">The game will continue automatically when they return.</p>
+                    <button class="end-game-btn" id="endGameEarly">End Game Now</button>
+                </div>
+            `;
+            
+            // Insert after the game header
+            const gameHeader = document.querySelector('.game-header');
+            if (gameHeader) {
+                gameHeader.parentNode.insertBefore(graceMessage, gameHeader.nextSibling);
+            }
+            
+            // Add event listener for ending game early
+            document.getElementById('endGameEarly').addEventListener('click', () => {
+                this.endGameEarly();
+            });
+            
+            // Start countdown timer
+            this.startGracePeriodTimer();
+        } else {
+            // Update existing message
+            graceMessage.querySelector('p strong').textContent = playerName;
+        }
+    }
+
+    startGracePeriodTimer() {
+        let timeLeft = 300; // 5 minutes in seconds
+        const timerElement = document.getElementById('gracePeriodTimer');
+        
+        const countdown = setInterval(() => {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                this.gracePeriodExpired();
+            }
+            timeLeft--;
+        }, 1000);
+        
+        // Store the interval ID so we can clear it if needed
+        this.gracePeriodInterval = countdown;
+    }
+
+    gracePeriodExpired() {
+        const graceMessage = document.getElementById('gracePeriodMessage');
+        if (graceMessage) {
+            graceMessage.innerHTML = `
+                <div class="grace-period-content expired">
+                    <h3>⏰ Grace Period Expired</h3>
+                    <p>The other player did not return within 5 minutes.</p>
+                    <button class="new-game-btn" onclick="this.resetGame()">Return to Lobby</button>
+                </div>
+            `;
+        }
+    }
+
+    endGameEarly() {
+        if (confirm('Are you sure you want to end the game? The other player will not be able to rejoin.')) {
+            this.resetGame();
+        }
+    }
+
+    handlePlayerReconnected(data) {
+        // Remove grace period message
+        const graceMessage = document.getElementById('gracePeriodMessage');
+        if (graceMessage) {
+            graceMessage.remove();
+        }
+        
+        // Clear any grace period timer
+        if (this.gracePeriodInterval) {
+            clearInterval(this.gracePeriodInterval);
+            this.gracePeriodInterval = null;
+        }
+        
+        // Show reconnection message
+        this.showReconnectionMessage(data.playerName);
+        
+        // Update game state
+        if (data.gameState) {
+            this.updateGameState(data.gameState);
+        }
+    }
+
+    showReconnectionMessage(playerName) {
+        // Create temporary reconnection notification
+        const notification = document.createElement('div');
+        notification.className = 'reconnection-notification';
+        notification.innerHTML = `
+            <div class="reconnection-content">
+                <h3>🎉 Player Reconnected!</h3>
+                <p><strong>${playerName}</strong> has rejoined the game.</p>
+            </div>
+        `;
+        
+        // Insert at the top of the game board
+        const gameBoard = document.getElementById('gameBoard');
+        if (gameBoard) {
+            gameBoard.insertBefore(notification, gameBoard.firstChild);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 3000);
+        }
     }
 
     updateGameState(state) {

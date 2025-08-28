@@ -417,6 +417,99 @@ header h1 {
     box-shadow: 0 5px 15px rgba(255, 154, 158, 0.4);
 }
 
+.grace-period-message {
+    margin: 20px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    border-radius: 15px;
+    text-align: center;
+    border: 2px solid #ff8a65;
+}
+
+.grace-period-content h3 {
+    margin: 0 0 15px 0;
+    color: #d84315;
+    font-size: 1.4rem;
+}
+
+.grace-period-content p {
+    margin: 10px 0;
+    color: #555;
+}
+
+.grace-period-timer {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #d84315;
+    margin: 20px 0;
+    font-family: monospace;
+}
+
+.grace-period-note {
+    font-style: italic;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.end-game-btn {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 20px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 15px;
+}
+
+.end-game-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+}
+
+.grace-period-content.expired {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-color: #6c757d;
+}
+
+.grace-period-content.expired h3 {
+    color: #6c757d;
+}
+
+.reconnection-notification {
+    margin: 20px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border-radius: 15px;
+    text-align: center;
+    border: 2px solid #28a745;
+    animation: slideInDown 0.5s ease-out;
+}
+
+.reconnection-content h3 {
+    margin: 0 0 15px 0;
+    color: #155724;
+    font-size: 1.4rem;
+}
+
+.reconnection-content p {
+    margin: 10px 0;
+    color: #155724;
+}
+
+@keyframes slideInDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
 .game-code {
     font-size: 1.1rem;
 }
