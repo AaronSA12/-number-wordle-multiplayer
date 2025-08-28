@@ -22,6 +22,10 @@ class MultiplayerNumberWordle {
         this.recoveryAttempts = 0;
         this.maxRecoveryAttempts = 3;
         
+        // Player tracking
+        this.player1Name = null;
+        this.player2Name = null;
+        
         this.initializeSocket();
         this.initializeEventListeners();
         this.updateConnectionStatus('connecting');
@@ -229,6 +233,9 @@ class MultiplayerNumberWordle {
             this.gameId = data.gameId;
             this.playerName = playerName;
             
+            // Set the first player (game creator) as player1
+            this.player1Name = playerName;
+            
             this.socket.emit('joinGame', { gameId: this.gameId, playerName: this.playerName });
             this.showGameSetup();
             
@@ -249,6 +256,11 @@ class MultiplayerNumberWordle {
 
         this.gameId = gameCode;
         this.playerName = playerName;
+        
+        // If this is the first player joining, set them as player1
+        if (!this.player1Name) {
+            this.player1Name = playerName;
+        }
         
         this.socket.emit('joinGame', { gameId: this.gameId, playerName: this.playerName });
         this.showGameSetup();
@@ -388,23 +400,45 @@ class MultiplayerNumberWordle {
     handlePlayerJoined(data) {
         const playersList = document.getElementById('playersList');
         if (data.gameState && data.gameState.gameStarted) {
-            playersList.textContent = `${data.playerName} and ${this.playerName}`;
+            // Game has started, show both player names
+            this.updatePlayerListDisplay();
             this.updateGameState(data.gameState);
         } else {
+            // Only one player so far, show current player
             playersList.textContent = this.playerName;
         }
     }
 
     handleSecondPlayerJoined(data) {
         console.log('Second player joined:', data);
-        const playersList = document.getElementById('playersList');
-        playersList.textContent = `${this.playerName} and ${data.playerName}`;
+        
+        // Set the second player name
+        this.player2Name = data.playerName;
         
         // Update waiting message
         document.getElementById('waitingMessage').textContent = 'Both players joined! Set your numbers to start the game.';
         
+        // Update player list display
+        this.updatePlayerListDisplay();
+        
         // Request updated game state
         this.socket.emit('getGameState');
+    }
+
+    updatePlayerListDisplay() {
+        const playersList = document.getElementById('playersList');
+        if (!playersList) return;
+        
+        if (this.player1Name && this.player2Name) {
+            // Both players have joined
+            playersList.textContent = `${this.player1Name} and ${this.player2Name}`;
+        } else if (this.player1Name) {
+            // Only first player has joined
+            playersList.textContent = this.player1Name;
+        } else {
+            // No players yet
+            playersList.textContent = 'Waiting for players...';
+        }
     }
 
     handleNumbersSet(data) {
@@ -1014,6 +1048,10 @@ class MultiplayerNumberWordle {
         this.gameState = null;
         this.gameBoardShown = false;
         this.notes = {};
+        
+        // Reset player tracking
+        this.player1Name = null;
+        this.player2Name = null;
         
         // Clear all inputs
         const allInputs = document.querySelectorAll('input');
