@@ -242,6 +242,34 @@
         <div class="winner-screen" id="winnerScreen" style="display: none;">
             <h2>🎉 Congratulations! 🎉</h2>
             <p id="winnerText"></p>
+            
+            <div class="revealed-numbers-section" id="revealedNumbersSection" style="display: none;">
+                <h3>🔍 The Numbers Revealed</h3>
+                <div class="numbers-comparison">
+                    <div class="player-numbers">
+                        <h4 id="player1NameDisplay">Player 1</h4>
+                        <div class="revealed-numbers" id="player1NumbersDisplay">
+                            <!-- Player 1 numbers will be displayed here -->
+                        </div>
+                    </div>
+                    <div class="vs-separator">
+                        <span>VS</span>
+                    </div>
+                    <div class="player-numbers">
+                        <h4 id="player2NameDisplay">Player 2</h4>
+                        <div class="revealed-numbers" id="player2NumbersDisplay">
+                            <!-- Player 2 numbers will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="game-stats" id="gameStatsSection" style="display: none;">
+                    <h4>📊 Game Statistics</h4>
+                    <div class="stats-grid" id="statsGrid">
+                        <!-- Game stats will be displayed here -->
+                    </div>
+                </div>
+            </div>
+            
             <button class="new-game-btn" id="newGameFromWinner">Play Again</button>
         </div>
 

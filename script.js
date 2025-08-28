@@ -439,6 +439,122 @@ class MultiplayerNumberWordle {
         document.getElementById('winnerText').textContent = winnerText;
         document.getElementById('gameBoard').style.display = 'none';
         document.getElementById('winnerScreen').style.display = 'block';
+        
+        // Show revealed numbers if available
+        this.showRevealedNumbers();
+    }
+
+    showRevealedNumbers() {
+        // Check if we have revealed numbers in the game state
+        if (this.gameState && this.gameState.revealedNumbers) {
+            const revealed = this.gameState.revealedNumbers;
+            
+            // Show the revealed numbers section
+            document.getElementById('revealedNumbersSection').style.display = 'block';
+            
+            // Update player names
+            document.getElementById('player1NameDisplay').textContent = revealed.player1Name;
+            document.getElementById('player2NameDisplay').textContent = revealed.player2Name;
+            
+            // Display Player 1 numbers
+            const player1Container = document.getElementById('player1NumbersDisplay');
+            player1Container.innerHTML = '';
+            if (revealed.player1Numbers) {
+                revealed.player1Numbers.forEach(num => {
+                    const numberElement = document.createElement('div');
+                    numberElement.className = 'revealed-number';
+                    numberElement.textContent = num;
+                    player1Container.appendChild(numberElement);
+                });
+            }
+            
+            // Display Player 2 numbers
+            const player2Container = document.getElementById('player2NumbersDisplay');
+            player2Container.innerHTML = '';
+            if (revealed.player2Numbers) {
+                revealed.player2Numbers.forEach(num => {
+                    const numberElement = document.createElement('div');
+                    numberElement.className = 'revealed-number';
+                    numberElement.textContent = num;
+                    player2Container.appendChild(numberElement);
+                });
+            }
+            
+            // Show game statistics if available
+            this.showGameStats();
+        }
+    }
+
+    showGameStats() {
+        if (this.gameState) {
+            const statsSection = document.getElementById('gameStatsSection');
+            const statsGrid = document.getElementById('statsGrid');
+            
+            if (statsSection && statsGrid) {
+                statsSection.style.display = 'block';
+                statsGrid.innerHTML = '';
+                
+                // Calculate and display various statistics
+                const stats = this.calculateGameStats();
+                
+                // Total guesses for each player
+                const player1Guesses = stats.player1Guesses;
+                const player2Guesses = stats.player2Guesses;
+                
+                // Add stat items
+                this.addStatItem(statsGrid, player1Guesses, 'Player 1 Guesses');
+                this.addStatItem(statsGrid, player2Guesses, 'Player 2 Guesses');
+                
+                // Game duration if available
+                if (stats.gameDuration) {
+                    this.addStatItem(statsGrid, stats.gameDuration, 'Game Duration');
+                }
+                
+                // Winner info
+                const winnerName = this.gameState.winner === this.socket.id ? 'You' : 'Opponent';
+                this.addStatItem(statsGrid, winnerName, 'Winner');
+            }
+        }
+    }
+
+    calculateGameStats() {
+        const stats = {
+            player1Guesses: 0,
+            player2Guesses: 0,
+            gameDuration: null
+        };
+        
+        if (this.gameState) {
+            // Count guesses for each player
+            if (this.gameState.myHistory) {
+                stats.player1Guesses = this.gameState.myHistory.length;
+            }
+            if (this.gameState.opponentHistory) {
+                stats.player2Guesses = this.gameState.opponentHistory.length;
+            }
+            
+            // Calculate game duration if we have timestamps
+            if (this.gameState.myHistory && this.gameState.myHistory.length > 0) {
+                const firstGuess = this.gameState.myHistory[0].timestamp;
+                const lastGuess = this.gameState.myHistory[this.gameState.myHistory.length - 1].timestamp;
+                const duration = Math.floor((lastGuess - firstGuess) / 1000);
+                const minutes = Math.floor(duration / 60);
+                const seconds = duration % 60;
+                stats.gameDuration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+        
+        return stats;
+    }
+
+    addStatItem(container, value, label) {
+        const statItem = document.createElement('div');
+        statItem.className = 'stat-item';
+        statItem.innerHTML = `
+            <div class="stat-value">${value}</div>
+            <div class="stat-label">${label}</div>
+        `;
+        container.appendChild(statItem);
     }
 
     handlePlayerDisconnected(data) {
@@ -591,6 +707,11 @@ class MultiplayerNumberWordle {
             this.updateHistoryDisplay();
             this.updateMyNumbersDisplay(state);
             this.updateDuplicateWarning(state);
+            
+            // If game is finished, show winner screen with revealed numbers
+            if (state.gameStatus === 'finished' && state.winner) {
+                this.handleGameOver({ winner: state.winner });
+            }
         }
         
         // Fallback: if game is started but board not shown, force show it

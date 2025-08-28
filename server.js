@@ -157,6 +157,16 @@ class Game {
             opponentHasDuplicates: hasDuplicates
         };
         
+        // If game is finished, reveal both players' numbers
+        if (this.gameStatus === 'finished') {
+            gameState.revealedNumbers = {
+                player1Numbers: this.player1Numbers,
+                player2Numbers: this.player2Numbers,
+                player1Name: this.player1Id ? players.get(this.player1Id)?.name : 'Player 1',
+                player2Name: this.player2Id ? players.get(this.player2Id)?.name : 'Player 2'
+            };
+        }
+        
         // console.log(`Game state for ${playerId}: isMyTurn=${gameState.isMyTurn}, currentTurn=${this.currentTurn}`);
         
         return gameState;
